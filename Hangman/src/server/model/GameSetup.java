@@ -19,7 +19,7 @@ public class GameSetup {
                     this.gameData = "Game already in play";
                     break;
                 case "End Game":
-                    endGame();
+                    this.gameData = "Quitting Game";
                     break;
                 default:
                     gameEntry(input);
@@ -35,10 +35,6 @@ public class GameSetup {
     private void startGame() {
         game = new Game();
         this.gameData = game.startGame();
-    }
-
-    private void endGame() {
-        this.gameData = game.endGame();
     }
 
     private void gameEntry(String input) {
