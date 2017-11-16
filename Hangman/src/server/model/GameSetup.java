@@ -21,9 +21,6 @@ public class GameSetup {
                 case "Play Again":
                     restart();
                     break;
-                case "End Game":
-                    this.gameData = "Quitting Game";
-                    break;
                 default:
                     gameEntry(input);
                     break;

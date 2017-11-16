@@ -12,4 +12,6 @@ public class Controller {
     public String getOutput () {
         return model.getGameData();
     }
+
+
 }

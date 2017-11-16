@@ -31,10 +31,23 @@ public class ServerConnector {
     public void sendToServer(String s) throws IOException {
         output = new PrintWriter(socket.getOutputStream(), true);
         output.println(s);
+        if (s.contains("End Game")) {
+            disconnect();
+        }
     }
 
     public String receiveFromServer() throws IOException {
         input = new Scanner(socket.getInputStream());
         return input.nextLine();
+    }
+
+    private void disconnect() {
+        System.out.println("Disconecting from server");
+        try {
+            socket.close();
+            System.exit(0);
+        } catch (IOException e) {
+            System.out.println(e);
+        }
     }
 }

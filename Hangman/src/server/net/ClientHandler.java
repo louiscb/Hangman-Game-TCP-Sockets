@@ -12,6 +12,7 @@ public class ClientHandler implements Runnable {
     private Scanner input; //from client
     private PrintWriter output; //to client
     private final Controller cont = new Controller();
+    private boolean open = true;
 
     public ClientHandler(Socket client) {
         this.client = client;
@@ -20,7 +21,7 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         System.out.println("Found client");
-        while (true) {
+        while (open) {
             try {
                 input = new Scanner(client.getInputStream());
                 output = new PrintWriter(client.getOutputStream(), true);
@@ -29,9 +30,24 @@ public class ClientHandler implements Runnable {
             }
 
             String received = input.nextLine();
-            cont.setInput(received);
 
-            output.println(cont.getOutput());
+            if (received.contains("End Game")) {
+                disconnect();
+            } else {
+                cont.setInput(received);
+                output.println(cont.getOutput());
+            }
+        }
+    }
+
+    private void disconnect() {
+        open = false;
+
+        System.out.println("Disconnecting client " + client.toString());
+        try {
+            client.close();
+        } catch (IOException e) {
+          System.out.println(e);
         }
     }
 }
