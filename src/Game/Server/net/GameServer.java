@@ -24,7 +24,7 @@ public class GameServer {
     private void init() {
         try{
             ServerSocket socket = new ServerSocket(PORT_NO);
-            while (true){
+            while (true) {
 
                 Socket link = socket.accept();
                 startConnection(link);

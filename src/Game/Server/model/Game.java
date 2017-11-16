@@ -7,8 +7,10 @@ public class Game {
         return gameData;
     }
 
-    public void setGamedata( String str ){
-        System.out.println("got to the server");
-        gameData = str;
+    public void setGamedata(String str){
+        if (str.equals("start"))
+            gameData = "starting code";
+        else if (str.equals("end"))
+            gameData = "goodbye";
     }
 }

@@ -32,20 +32,15 @@ public class UserInterface implements Runnable {
                         e.printStackTrace();
                     }
                     break;
-
-                case "receive" :
-                    try {
-                        System.out.println(contr.receiveFromController());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    ;
-                    break;
-
                 default:
                     break;
             }
 
+            try {
+                System.out.println(contr.receiveFromController());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }
