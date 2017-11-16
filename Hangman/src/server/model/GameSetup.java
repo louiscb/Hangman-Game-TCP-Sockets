@@ -18,6 +18,9 @@ public class GameSetup {
                 case "Start Game":
                     this.gameData = "Game already in play";
                     break;
+                case "Play Again":
+                    restart();
+                    break;
                 case "End Game":
                     this.gameData = "Quitting Game";
                     break;
@@ -35,6 +38,10 @@ public class GameSetup {
     private void startGame() {
         game = new Game();
         this.gameData = game.startGame();
+    }
+
+    private void restart() {
+        this.gameData = game.restart();
     }
 
     private void gameEntry(String input) {
