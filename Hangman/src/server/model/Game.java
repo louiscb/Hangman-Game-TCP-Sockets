@@ -1,8 +1,11 @@
 package server.model;
 
 public class Game {
+    String word;
+
     public String startGame() {
-        return null;
+        word = Word.getRandomWord();
+        return "Start Game";
     }
 
     public String endGame() {
@@ -10,6 +13,6 @@ public class Game {
     }
 
     public String gameEntry(String input) {
-        return null;
+        return word;
     }
 }
