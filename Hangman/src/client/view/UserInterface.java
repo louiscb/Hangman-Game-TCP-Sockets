@@ -5,27 +5,47 @@ import client.controller.Controller;
 import java.io.IOException;
 import java.util.Scanner;
 
-public class UserInterface implements Runnable {
+public class UserInterface  {
     private Controller cont;
     private String[] msgArray;
 
     public void start() {
+        //create one controller object for each client
         cont = new Controller();
-        new Thread(this).start();
+
+        System.out.println("Type 'Start Game' to play...");
+        runLoop();
     }
 
-    public void run() {
-        System.out.println("Type 'Start Game' to play...");
+    public void runLoop() {
         while (true) {
             Scanner userEntry = new Scanner(System.in);
-
             String s = userEntry.nextLine();
+
+            //We create a thread for every input from the client, which sends to input to the server and outputs whats recieved from the server
+            Thread thread = new Thread(new inputThread(s));
+            thread.start();
+        }
+    }
+
+    class inputThread implements Runnable {
+        private String inputToSend;
+
+        inputThread (String input) {
+            inputToSend = input;
+        }
+
+        public void run() {
+            //sending data to server
             try {
-                cont.setData(s);
+                cont.setData(inputToSend);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             String messageFromServer = null;
+
+            //Recieving data from server
             try {
                 messageFromServer = cont.getData();
             } catch (IOException e) {

@@ -11,6 +11,12 @@ public class GameSetup {
     }
 
     public void setGameData (String input) {
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         System.out.println("Server Received word: " + input);
 
         if (isGameStarted)
