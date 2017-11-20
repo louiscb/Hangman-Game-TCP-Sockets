@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 public class GameServer {
+
     private static final int portNum = 8080;
 
     public static void main(String[] args) {
@@ -24,7 +25,7 @@ public class GameServer {
             }
 
         } catch (IOException e) {
-            System.out.println("Couldn't connect to server");
+            System.out.println(e);
         }
     }
 
