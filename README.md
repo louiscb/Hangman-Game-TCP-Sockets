@@ -1,8 +1,7 @@
 # Hangman-Game
 
-Client-server hangman game that uses TCP to communicate over blocking sockets.
+Client-server hangman game that uses TCP to communicate over blocking sockets. Built using Java 1.8.
 
-Run the java class server.net.GameServer to initiate the server.
+To start the server, go to the folder Hangman/out/production/Hangman and run Java server.net.GameServer
 
-Run the java class client.startup.Startup to inititate the client.
-
+To start the client, go to the folder Hangman/out/production/Hangman and run Java client.startup.Startup
