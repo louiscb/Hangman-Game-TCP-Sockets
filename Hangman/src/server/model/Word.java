@@ -10,7 +10,7 @@ public class Word {
     private static ArrayList<String> lOfWords = new ArrayList<>();
 
     public static String getRandomWord(){
-        try( Scanner sc = new Scanner(new File("src/server/model/assets/words.txt"))) {
+        try( Scanner sc = new Scanner(new File("/Users/Louis/Google-Drive/KTH/Year-2/Courses/Network-Programming/Homework-2/Hangman-Game-TCP-Sockets/Hangman/src/server/model/assets/words.txt"))) {
             while(sc.hasNext()){
                 String str=sc.next();
                 lOfWords.add(str);
