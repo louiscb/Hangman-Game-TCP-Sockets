@@ -1,15 +1,14 @@
 package server.net;
 
+import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.security.Key;
 import java.util.Iterator;
 
@@ -52,11 +51,14 @@ public class GameServer {
 
                     if (key.isAcceptable()) {
                         startConnection(key);
-                    } else if (key.isWritable()) {
-                        //DOnt know what to write here? THis isnt getting called by the program
-                       //writeClient(key);
+                        System.out.println("hello");
                     } else if (key.isReadable()) {
                         readClient(key);
+                        System.out.println("yooo");
+                    } else if (key.isWritable()) {
+                        System.out.println("IM WRITING HERE");
+                        //DOnt know what to write here? THis isnt getting called by the program
+                        writeClient(key);
                     }
                 }
             }
@@ -85,33 +87,21 @@ public class GameServer {
 
         try {
             client.handler.fromClient();
+            key.interestOps(key.OP_WRITE);
         } catch (IOException e) {
             System.out.println(e);
         }
+    }
 
-        //ECHOS BACK TO CLIENT
+    void writeClient(SelectionKey key) {
+        Client client = (Client)key.attachment();
 
-//        ByteBuffer buffer = ByteBuffer.allocate(2048);
-//
-//        client.clientChannel = (SocketChannel)key.channel();
-//
-//        buffer.clear();
-//
-//        try {
-//            int numBytes = client.clientChannel.read(buffer);
-//
-//            System.out.println(numBytes + " bytes read bitch");
-//
-//            if (numBytes != -1) {
-//                buffer.flip();
-//                while (buffer.remaining()>0)
-//                    client.clientChannel.write(buffer);
-//            }
-//        } catch (IOException e ) {
-//            e.printStackTrace();
-//        }
-
-
+        try {
+            client.handler.toClient();
+            key.interestOps(key.OP_READ);
+        } catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
     private class Client {

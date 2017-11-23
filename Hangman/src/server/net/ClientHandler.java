@@ -65,21 +65,20 @@ public class ClientHandler implements Runnable {
         int numBytes = channel.read(dataFromClient);
         String fromClientMsg =  extractMessageFromBuffer();
         cont.setInput(fromClientMsg);
-//        System.out.println(fromClientMsg);
-        toClient();
     }
 
-    void toClient() {
+    void toClient() throws IOException{
+        dataToClient.clear();
+
+        String fromServerMsg = cont.getOutput();
+
+        dataToClient = ByteBuffer.wrap(fromServerMsg.getBytes());
+
         dataToClient.flip();
-        String fromServer = cont.getOutput();
 
-        dataToClient = ByteBuffer.wrap((fromServer.getBytes(Charset.defaultCharset())));
+        System.out.println(dataFromClient);
 
-        try {
-            channel.write(dataToClient);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        channel.write(dataToClient);
     }
 
     private String extractMessageFromBuffer() {
