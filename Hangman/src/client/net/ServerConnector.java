@@ -14,8 +14,7 @@ import java.util.Scanner;
 
 public class ServerConnector implements  Runnable{
     private Socket socket;
-    private PrintWriter output;
-    private Scanner input;
+
     private static final int portNum = 8080;
     private static InetAddress host;
 
@@ -23,7 +22,6 @@ public class ServerConnector implements  Runnable{
     private SocketChannel socketChannel;
     private Selector selector;
     private LinkedList<String> sendingQueue = new LinkedList<String>();
-    private LinkedList<String> receivingQueue = new LinkedList<String>();
     private ByteBuffer bufferFromServer = ByteBuffer.allocateDirect(2048);
     private volatile boolean timeToSend = false;
 
@@ -32,70 +30,14 @@ public class ServerConnector implements  Runnable{
         new Thread(this).start();
     }
 
-    public void disconnectFromServer() {
-        System.out.println("client is disconnected");
-        try {
-            this.socketChannel.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        this.socketChannel.keyFor(selector).cancel();
-    }
-
-    public void addUserMsgToQueue ( String msg){
-        synchronized (sendingQueue) {
-            sendingQueue.add(msg);
-        }
-
-        this.timeToSend = true;
-        selector.wakeup();
-    }
-
-//    public void sendToServer(String s) throws IOException {
-//        output = new PrintWriter(socket.getOutputStream(), true);
-//        output.println(s);
-//        if (s.contains("End Game")) {
-//            disconnect();
-//        }
-//    }
-
-    public String receiveFromServer() throws IOException {
-        input = new Scanner(socket.getInputStream());
-        return input.nextLine();
-    }
-
-//    private void disconnect() {
-//        System.out.println("Disconnecting from server");
-//        try {
-//            socket.close();
-//            System.exit(0);
-//        } catch (IOException e) {
-//            System.out.println(e);
-//        }
-//    }
-
-    private void initConnection() throws IOException {
-        socketChannel = SocketChannel.open();
-        socketChannel.configureBlocking(false);
-        socketChannel.connect(serverAddress);
-    }
-
-    private void initSelector() throws IOException {
-        selector = Selector.open();
-        socketChannel.register(selector, SelectionKey.OP_CONNECT);
-    }
-
     @Override
     public void run() {
-
-
         try {
             initConnection();
             initSelector();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         while(true){
             try {
 
@@ -112,10 +54,11 @@ public class ServerConnector implements  Runnable{
                     }
                     if (key.isConnectable()) {
                         completeConnection(key);
-                    } else if (key.isReadable()) {
-                        recvFromServer(key);
                     } else if (key.isWritable()) {
                         sendToServer(key);
+                    }
+                    else if (key.isReadable()) {
+                        recvFromServer(key);
                     }
                 }
             } catch (IOException e) {
@@ -124,23 +67,20 @@ public class ServerConnector implements  Runnable{
         }
     }
 
+    private void initConnection() throws IOException {
+        socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+        socketChannel.connect(serverAddress);
+    }
+
+    private void initSelector() throws IOException {
+        selector = Selector.open();
+        socketChannel.register(selector, SelectionKey.OP_CONNECT);
+    }
+
     private void completeConnection(SelectionKey key) throws IOException {
         socketChannel.finishConnect();
         key.interestOps(SelectionKey.OP_WRITE);
-    }
-
-    private void recvFromServer(SelectionKey key) throws IOException {
-        bufferFromServer.clear();
-        int numOfReadBytes = socketChannel.read(bufferFromServer);
-        if (numOfReadBytes == -1) {
-            throw new IOException("Not able to read from server");
-        }
-
-        String recvdString = extractMessageFromBuffer();
-        System.out.println(recvdString);
-
-        key.interestOps(SelectionKey.OP_WRITE);
-
     }
 
     private void sendToServer(SelectionKey key) throws IOException {
@@ -152,24 +92,52 @@ public class ServerConnector implements  Runnable{
                 if (bufferTosend.hasRemaining()) return;
             }
         }
-
         key.interestOps(SelectionKey.OP_READ);
-
     }
 
+    private void recvFromServer(SelectionKey key) throws IOException {
+        bufferFromServer.clear();
+        int numOfReadBytes = socketChannel.read(bufferFromServer);
+        if (numOfReadBytes == -1) {
+            throw new IOException("Not able to read from server");
+        }
+        String recvdString = extractMessageFromBuffer();
+        showOutput(recvdString);
 
-//    private void showOutput (String recvdString){
-//        String[] dataToShow = recvdString.split("/");
-//        System.out.println("---" + dataToShow[3] + "---" );
-//        System.out.println("Score: " + dataToShow[0] + "     Attempts: " + dataToShow[1] + "    Wrong letters: " + dataToShow[4]);
-//        System.out.println("Word to guess:   " + dataToShow[2] + "\n");
-//
-//    }
+        key.interestOps(SelectionKey.OP_WRITE);
+    }
+
+    public void disconnectFromServer() {
+        System.out.println("client is disconnected");
+        try {
+            this.socketChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.socketChannel.keyFor(selector).cancel();
+    }
+
+    public void addUserMsgToQueue ( String msg){
+        synchronized (sendingQueue) {
+            sendingQueue.add(msg);
+        }
+        this.timeToSend = true;
+        selector.wakeup();
+    }
+
 
     private String extractMessageFromBuffer() {
         bufferFromServer.flip();
         byte[] bytes = new byte[bufferFromServer.remaining()];
         bufferFromServer.get(bytes);
         return new String(bytes);
+    }
+
+        private void showOutput (String recvdString){
+        String[] dataToShow = recvdString.split("/");
+        System.out.println("---" + dataToShow[3] + "---" );
+        System.out.println("Score: " + dataToShow[0] + "     Attempts: " + dataToShow[1]);
+        System.out.println("Word to guess:   " + dataToShow[2] + "\n");
+
     }
 }

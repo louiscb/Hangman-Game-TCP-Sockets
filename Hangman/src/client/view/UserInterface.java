@@ -25,7 +25,7 @@ public class UserInterface implements Runnable {
                 if (userMsg.equalsIgnoreCase("connect")){
                     cont.connect();
                 }
-                else if (userMsg.equalsIgnoreCase("end game")){
+                else if (userMsg.equalsIgnoreCase("disconnect")){
                     cont.disconnect();
                 }
                 else{
