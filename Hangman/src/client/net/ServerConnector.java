@@ -48,7 +48,7 @@ public class ServerConnector implements  Runnable{
         }
 
         this.timeToSend = true;
-        selector.wakeup();
+//        selector.wakeup();
     }
 
 //    public void sendToServer(String s) throws IOException {
@@ -152,7 +152,7 @@ public class ServerConnector implements  Runnable{
     }
 
     private void completeConnection(SelectionKey key) throws IOException {
-        socketChannel.finishConnect();
+        //socketChannel.finishConnect();
         key.interestOps(SelectionKey.OP_WRITE);
     }
 
