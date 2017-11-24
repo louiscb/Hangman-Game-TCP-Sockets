@@ -11,12 +11,6 @@ public class GameSetup {
     }
 
     public void setGameData (String input) {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         System.out.println("Server Received word: " + input);
 
         if (isGameStarted)
@@ -32,7 +26,8 @@ public class GameSetup {
                     break;
             }
 
-        if (input.equals("Start Game") && !isGameStarted) {
+        //Had to change this to contains instead of accepts because of trailing empty spaces
+        if (input.contains("Start Game") && !isGameStarted) {
             isGameStarted = true;
             startGame();
         }

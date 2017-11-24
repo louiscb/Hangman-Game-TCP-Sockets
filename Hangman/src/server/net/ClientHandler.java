@@ -1,53 +1,70 @@
 package server.net;
 
 import server.controller.Controller;
-
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.Scanner;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
 
-public class ClientHandler implements Runnable {
-    private final Socket client;
-    private Scanner input; //from client
-    private PrintWriter output; //to client
-    private final Controller cont = new Controller();
-    private boolean open = true;
+public class ClientHandler {
+    private final SocketChannel channel;
+    private final ByteBuffer dataFromClient = ByteBuffer.allocateDirect(2048);
+    private LinkedList<String> sendingQueue = new LinkedList<String>();
+    private LinkedList<String> receivingQueue = new LinkedList<String>();
+    private Controller controller = new Controller();
 
-    public ClientHandler(Socket client) {
-        this.client = client;
+    public ClientHandler(SocketChannel client) {
+        this.channel = client;
     }
 
-    @Override
-    public void run() {
-        System.out.println("Found client");
-        while (open) {
-            try {
-                input = new Scanner(client.getInputStream());
-                output = new PrintWriter(client.getOutputStream(), true);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    void fromClient() throws IOException{
+        //reading data from the channel
+        dataFromClient.clear();
+        int numOfReadBytes = channel.read(dataFromClient);
+        if (numOfReadBytes == -1){
+            System.out.println("Client has closed connection.");
+            channel.close();
+        }
 
-            String received = input.nextLine();
+        // adding the extracted string to the queue
+        receivingQueue.add(extractMessageFromBuffer());
+        // calling the run method
+        gameProcessing();
+    }
 
-            if (received.contains("End Game")) {
-                disconnect();
-            } else {
-                cont.setInput(received);
-                output.println(cont.getOutput());
+    void toClient() {
+        synchronized (sendingQueue) {
+            while (!sendingQueue.isEmpty()) {
+                ByteBuffer message = ByteBuffer.wrap(sendingQueue.remove().getBytes());
+                try {
+                    channel.write(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
-    private void disconnect() {
-        open = false;
-
-        System.out.println("Disconnecting client " + client.toString());
-        try {
-            client.close();
-        } catch (IOException e) {
-          System.out.println(e);
+    public void gameProcessing() {
+        // get the strings from the queue and pass them to the GameSetup
+        while (!receivingQueue.isEmpty()) {
+            String msg = receivingQueue.remove();
+            controller.setInput(msg);
+            addToSendingQueue(controller.getOutput());
         }
     }
+
+    private void addToSendingQueue(String msg) {
+        synchronized (sendingQueue) {
+            sendingQueue.add(msg);
+        }
+    }
+
+    private String extractMessageFromBuffer() {
+        dataFromClient.flip();
+        byte[] bytes = new byte[dataFromClient.remaining()];
+        dataFromClient.get(bytes);
+        return new String(bytes);
+    }
+
 }
