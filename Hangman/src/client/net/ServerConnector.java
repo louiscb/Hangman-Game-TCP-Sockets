@@ -48,7 +48,7 @@ public class ServerConnector implements  Runnable{
         }
 
         this.timeToSend = true;
-//        selector.wakeup();
+        selector.wakeup();
     }
 
 //    public void sendToServer(String s) throws IOException {
@@ -88,12 +88,23 @@ public class ServerConnector implements  Runnable{
     @Override
     public void run() {
 
+
+        try {
+            initConnection();
+            initSelector();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         while(true){
             try {
-                initConnection();
-                initSelector();
 
                 selector.select();
+                if(timeToSend){
+                    socketChannel.keyFor(selector).interestOps(SelectionKey.OP_WRITE);
+                    timeToSend = false;
+                }
+
                 for (SelectionKey key : selector.selectedKeys()) {
                     selector.selectedKeys().remove(key);
                     if (!key.isValid()) {
@@ -107,14 +118,15 @@ public class ServerConnector implements  Runnable{
                         sendToServer(key);
                     }
                 }
-
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
+    }
 
+    private void completeConnection(SelectionKey key) throws IOException {
+        socketChannel.finishConnect();
+        key.interestOps(SelectionKey.OP_WRITE);
     }
 
     private void recvFromServer(SelectionKey key) throws IOException {
@@ -125,15 +137,9 @@ public class ServerConnector implements  Runnable{
         }
 
         String recvdString = extractMessageFromBuffer();
-        showOutput(recvdString);
+        System.out.println(recvdString);
 
-    }
-
-    private void showOutput (String recvdString){
-        String[] dataToShow = recvdString.split("/");
-        System.out.println("---" + dataToShow[3] + "---" );
-        System.out.println("Score: " + dataToShow[0] + "     Attempts: " + dataToShow[1] + "    Wrong letters: " + dataToShow[4]);
-        System.out.println("Word to guess:   " + dataToShow[2] + "\n");
+        key.interestOps(SelectionKey.OP_WRITE);
 
     }
 
@@ -151,10 +157,14 @@ public class ServerConnector implements  Runnable{
 
     }
 
-    private void completeConnection(SelectionKey key) throws IOException {
-        //socketChannel.finishConnect();
-        key.interestOps(SelectionKey.OP_WRITE);
-    }
+
+//    private void showOutput (String recvdString){
+//        String[] dataToShow = recvdString.split("/");
+//        System.out.println("---" + dataToShow[3] + "---" );
+//        System.out.println("Score: " + dataToShow[0] + "     Attempts: " + dataToShow[1] + "    Wrong letters: " + dataToShow[4]);
+//        System.out.println("Word to guess:   " + dataToShow[2] + "\n");
+//
+//    }
 
     private String extractMessageFromBuffer() {
         bufferFromServer.flip();

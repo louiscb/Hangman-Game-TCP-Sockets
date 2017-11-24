@@ -43,102 +43,47 @@ public class GameServer {
             selector = Selector.open();
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-
-
             while (true) {
-
-                while (!sendingQueue.isEmpty()) {
-                    sendingQueue.remove().interestOps(SelectionKey.OP_WRITE);
-                }
-                System.out.println("before");
                 selector.select();
-                System.out.println("after");
                 for (SelectionKey key : this.selector.selectedKeys()) {
+                    selector.selectedKeys().remove(key);
+
                     if (!key.isValid()) continue;
 
-                    if (key.isAcceptable()) {
-                        startConnection(key);
-
-                    }
+                    if (key.isAcceptable()) startConnection(key);
                     else if (key.isReadable()) readClient(key);
                     else if (key.isWritable()) writeToClient(key);
 
-                    selector.selectedKeys().remove(key);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-//
-//                while (iterator.hasNext()) {
-//                    SelectionKey key = iterator.next();
-//                    iterator.remove();
-//
-//                    if (key.isAcceptable()) {
-//                        startConnection(key);
-//                    } else if (key.isWritable()) {
-//                        //DOnt know what to write here? THis isnt getting called by the program
-//                       //writeClient(key);
-//                    } else if (key.isReadable()) {
-//                        readClient(key);
-//                    }
-//                }
-//            }
-    }
-
-    private void writeToClient(SelectionKey key) {
-        ClientHandler clientHandler = (ClientHandler) key.attachment();
-        clientHandler.toClient();
-        key.interestOps(SelectionKey.OP_READ);
     }
 
     private void startConnection (SelectionKey key) throws IOException {
-        SocketChannel socketChannel;
-        socketChannel = serverSocketChannel.accept();
+        System.out.println("STARTING CONNECTION");
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel = serverSocketChannel.accept();
         socketChannel.configureBlocking(false);
-
-        System.out.println("Connection with " + socketChannel);
-
-        Client client = new Client(socketChannel);
-        key.attach(client);
-        socketChannel.register(selector, SelectionKey.OP_READ, client);
-        System.out.println("reading passed");
+        ClientHandler handler = new ClientHandler(socketChannel);
+        key.attach(handler);
+        socketChannel.register(selector, SelectionKey.OP_READ, handler);
     }
 
     private void readClient(SelectionKey key) throws IOException {
-        Client client = (Client)key.attachment();
+        System.out.println("READING CLIENT");
+        ClientHandler handler = (ClientHandler) key.attachment();
+        handler.fromClient();
 
-        try {
-            client.handler.fromClient();
-        } catch (IOException clientHasClosedConnection) {
-            removeClient(key);
-        }
+        key.interestOps(SelectionKey.OP_WRITE);
+    }
 
-        //ECHOS BACK TO CLIENT
-
-//        ByteBuffer buffer = ByteBuffer.allocate(2048);
-//
-//        client.clientChannel = (SocketChannel)key.channel();
-//
-//        buffer.clear();
-//
-//        try {
-//            int numBytes = client.clientChannel.read(buffer);
-//
-//            System.out.println(numBytes + " bytes read bitch");
-//
-//            if (numBytes != -1) {
-//                buffer.flip();
-//                while (buffer.remaining()>0)
-//                    client.clientChannel.write(buffer);
-//            }
-//        } catch (IOException e ) {
-//            e.printStackTrace();
-//        }
-
-
+    private void writeToClient(SelectionKey key) {
+        System.out.println("WRITING CLIENT");
+        ClientHandler clientHandler = (ClientHandler) key.attachment();
+        clientHandler.toClient();
+        key.interestOps(SelectionKey.OP_READ);
     }
 
     private void removeClient(SelectionKey clientKey) throws IOException {

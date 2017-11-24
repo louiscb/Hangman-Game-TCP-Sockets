@@ -5,15 +5,13 @@ import server.model.GameSetup;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.concurrent.ForkJoinPool;
 
-public class ClientHandler implements Runnable {
+public class ClientHandler {
     //private final Socket client;
     private final SocketChannel channel;
     private Scanner input; //from client
@@ -32,48 +30,25 @@ public class ClientHandler implements Runnable {
 
     public ClientHandler(SocketChannel client) {
         this.channel = client;
+        //receivingQueue.add("Start Game");
     }
 
-    @Override
-    public void run() {
-        System.out.println("Connected");
+
+    public void gameProcessing() {
+        System.out.println("Client Handler");
 
         // get the strings from the queue and pass them to the GameSetup
         while (!receivingQueue.isEmpty()) {
             String msg = receivingQueue.remove();
             gameSetup.setGameData(msg);
-            sendResponseToClient(gameSetup.getGameData());
-
-//            try {
-//                input = new Scanner(client.getInputStream());
-//                output = new PrintWriter(client.getOutputStream(), true);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//            String received = input.nextLine();
-//
-//            if (received.contains("End Game")) {
-//                disconnect();
-//            } else {
-//                cont.setInput(received);
-//                output.println(cont.getOutput());
-//            }
+            addToSendingQueue(gameSetup.getGameData());
         }
     }
 
-    private void sendResponseToClient(String msg) {
-
-
+    private void addToSendingQueue(String msg) {
         synchronized (sendingQueue) {
             sendingQueue.add(msg);
         }
-//        gameServer.addMessageToWritingQueue(this.selectionKey);
-//        gameServer.wakeupSelector();
-    }
-
-    public void addtoSendingQueue (){
-        sendingQueue.add(gameSetup.getGameData());
     }
 
     public void disconnect() {
@@ -97,15 +72,7 @@ public class ClientHandler implements Runnable {
         // adding the extracted string to the queue
         receivingQueue.add(extractMessageFromBuffer());
         // calling the run method
-        ForkJoinPool.commonPool().execute(this);
-
-//        dataFromClient.clear();
-//        int numBytes = channel.read(dataFromClient);
-//        String fromClientMsg =  extractMessageFromBuffer();
-//        cont.setInput(fromClientMsg);
-////        System.out.println(fromClientMsg);
-//        toClient();
-//
+        gameProcessing();
 
     }
 
@@ -121,16 +88,6 @@ public class ClientHandler implements Runnable {
                 }
             }
         }
-//        dataToClient.flip();
-//        String fromServer = cont.getOutput();
-//
-//        dataToClient = ByteBuffer.wrap((fromServer.getBytes(Charset.defaultCharset())));
-//
-//        try {
-//            channel.write(dataToClient);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
     private String extractMessageFromBuffer() {
