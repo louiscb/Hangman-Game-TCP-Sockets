@@ -8,19 +8,16 @@ public class Controller {
 
     private ServerConnector connector = new ServerConnector();
 
-    public Controller() {
-        connect();
+    public void connect() {
+        connector.connectToServer();
     }
 
-    private void connect() {
-       connector.connectToServer();
+    public void disconnect() {
+        connector.disconnectFromServer();
     }
 
-    public void setData(String s) throws IOException{
-        connector.sendToServer(s);
+    public void addUserMsgToQueue ( String msg){
+        connector.addUserMsgToQueue(msg);
     }
 
-    public String getData() throws IOException{
-        return connector.receiveFromServer();
-    }
 }
